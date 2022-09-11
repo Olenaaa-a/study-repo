@@ -5,7 +5,7 @@
 DIR_PATH=$1
 
 
-function () {
+vm_stat () {
     uname -a | tee $DIR_PATH/info
     cat /etc/lsb-release | tee -a $DIR_PATH/info
     df -h | tee $DIR_PATH/disks
@@ -16,8 +16,15 @@ function () {
     cp /proc/cpuinfo $DIR_PATH/
     chmod a+w $DIR_PATH/cpuinfo
     top -n 1 | head -n 5 | tee -a $DIR_PATH/cpuinfo
+}
+
+
+zip_vm_stat () {
     sudo tar cfz report.tar.gz $DIR_PATH/
 }
+
+
+
 
 #Commands
 if [ "$DIR_PATH" = "" ];
@@ -31,7 +38,14 @@ then
     mkdir -p $DIR_PATH
     if [ $? -eq 0 ];
     then
-        function
+        vm_stat
+	while getopts "--archieve" option; do
+            case $option in
+                —archieve) 
+    		    zip_vm_stat
+                    exit;;
+            esac
+        done
     else
         echo FAIL
         echo "cannot create directory $DIR_PATH"
