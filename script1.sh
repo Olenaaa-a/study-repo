@@ -1,6 +1,4 @@
-#!/bin/bash
-
-#Functions
+#Variables
 vm_stat () {
     if [ "$DIR_PATH" = "" ];
     then
@@ -36,36 +34,31 @@ zip_vm_stat () {
     sudo tar cfz report.tar.gz $DIR_PATH/
 }
 
-#Option strings
-SHORT=p:a
-LONG=path:,archive
 
-#Reading options
-OPTS=$(getopt --options $SHORT --long $LONG --name "$0" -- "$@")
+usage () {
+    echo "Enter the right PATH.\nExample of usage: sh script1.sh --path PATH_TO_DEST_DIR --archive\n\nArguments and options:\n--path, required                 - PATH to destination directory.\n--archive, optional              - option to compese destination directory."
+}
 
-eval set -- "$OPTS"
 
-ARCHIVE=false
+
 
 while true ; do
     case "$1" in
-        -p | --path )
+        '--path')
             DIR_PATH="$2"
             vm_stat
-            shift 2
-            ;;
-        -a | --archive )
-            ARCHIVE=true
-            zip_vm_stat
-            shift
-            ;;
-        -- )
-            shift
-            break
-            ;;
+            case "$3" in
+                '--archive')
+                    zip_vm_stat
+                    break
+                    ;;
+            esac;;
         *)
-            echo "Enter the right PATH.\nExample of usage: sh script1.sh --path PATH_TO_DEST_DIR --archive\n\nArguments and options:\n--path                   - PATH to destination directory.\n--archive                 - option to compese destination directory."
-            exit 1
+            usage
+            exit 0
             ;;
     esac
 done
+
+
+
