@@ -1,3 +1,6 @@
+#!/bin/bash
+set -x
+set -e
 #Variables
 vm_stat () {
     if [ "$DIR_PATH" = "" ];
@@ -41,24 +44,20 @@ usage () {
 
 
 
-
-while true ; do
-    case "$1" in
-        '--path')
-            DIR_PATH="$2"
+while getopts "p:a" params ; do
+    case "$params" in
+        p)
+            DIR_PATH=$OPTARG
             vm_stat
-            case "$3" in
-                '--archive')
-                    zip_vm_stat
-                    break
-                    ;;
-            esac;;
+            ;;
+        a)
+            zip_vm_stat
+	    ;;
         *)
             usage
-            exit 0
-            ;;
+	    exit1
+	    ;;
     esac
 done
-
 
 
