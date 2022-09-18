@@ -39,43 +39,24 @@ zip_vm_stat () {
 
 
 usage () {
-    echo "Enter the right PATH.\nExample of usage: sh script1.sh --path PATH_TO_DEST_DIR --archive\n\nArguments and options:\n--path, required                 - PATH to destination directory.\n--archive, optional              - option to compese destination directory."
+    echo "Enter the right PATH.\nExample of usage: sh script1.sh --path PATH_TO_DEST_DIR --archive\n\nArguments and options:\n--path, required
+       - PATH to destination directory.\n--archive, optional              - option to compese destination directory."
 }
 
-
-optspec=":-:"
-while getopts "$optspec" optchar; do
-    case "${optchar}" in
-        -)
-            case "${OPTARG}" in
-                path)
-                    DIR_PATH="${OPTIND}"
-                    vm_stat
-                    ;;
-                archive)
-                    zip_vm_stat
-		    ;;
-            esac
-            ;;
-    esac
-done    
-    	
 while getopts "p:a" params; do
-    case $params in	
+    case $params in
         p)
             DIR_PATH=$OPTARG
             vm_stat
             ;;
         a)
             zip_vm_stat
-	    ;;
+            ;;
         ?)
             usage
-	    exit1
-	    ;;
+            exit1
+            ;;
     esac
 done
 
-
-
-
+#eval set -- "$OPTS"
