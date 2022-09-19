@@ -43,7 +43,10 @@ usage () {
        - PATH to destination directory.\n--archive, optional              - option to compese destination directory."
 }
 
-while getopts "p:a" params; do
+
+SHORT=p:a
+
+while getopts $SHORT params; do
     case $params in
         p)
             DIR_PATH=$OPTARG

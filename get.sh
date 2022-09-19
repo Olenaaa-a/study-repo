@@ -1,0 +1,20 @@
+while getopts "d:a:" opt; do
+    case $opt in
+        d)
+            echo "Entering DEBUG mode"
+            ;;
+        a)
+            echo "Got option 'a' with argurment ${OPTARG}"
+            ;;
+        :)
+            echo "Error: option ${OPTARG} requires an argument" 
+            ;;
+        ?)
+            echo "Invalid option: ${OPTARG}"
+            ;;
+    esac
+done
+
+shift $((OPTIND-1))
+
+echo "Remaining args are: <${@}>"
