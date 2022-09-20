@@ -1,6 +1,6 @@
 #!/bin/bash
 set -x
-set -e
+#set -e
 #Variables
 vm_stat () {
     if [ ! -d $DIR_PATH ];
@@ -22,7 +22,11 @@ vm_stat () {
             echo FAIL
             echo "cannot create directory $DIR_PATH"
             exit 1
-        fi
+	fi
+    else
+	echo "cannot create directory ‘$DIR_PATH’: File exists"
+	return 1
+        
     fi
 }
 
@@ -64,7 +68,7 @@ done
 if [ "x$DIR_PATH" != "x" ];
     then
 	   vm_stat
-	   if [ "$ARCHIVE" = true ];
+	   if [ "$ARCHIVE" = true ] && [ $? -gt 1 ];
            then
                zip_vm_stat
            fi
