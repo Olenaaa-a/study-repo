@@ -3,12 +3,6 @@ set -x
 set -e
 #Variables
 vm_stat () {
-    if [ "$DIR_PATH" = "" ];
-    then
-        echo 'Path value is empty'
-        exit 1
-    fi
-
     if [ ! -d $DIR_PATH ];
     then
         mkdir -p $DIR_PATH
@@ -49,17 +43,32 @@ SHORT=p:a
 while getopts $SHORT params; do
     case $params in
         p)
+            if [ "$OPTARG" = "" ];
+                then
+                    echo 'Path value is empty'
+                    exit 1
+            fi
             DIR_PATH=$OPTARG
-            vm_stat
             ;;
         a)
-            zip_vm_stat
-            ;;
+            ARCHIVE=true
+	    ;;
         ?)
             usage
             exit1
             ;;
     esac
 done
+
+
+if [ "x$DIR_PATH" != "x" ];
+    then
+	   vm_stat
+	   if [ "$ARCHIVE" = true ];
+           then
+               zip_vm_stat
+           fi
+fi
+
 
 #eval set -- "$OPTS"
