@@ -38,8 +38,8 @@ zip_vm_stat () {
 
 
 usage () {
-    echo "Enter the right PATH.\nExample of usage: sh script1.sh --path PATH_TO_DEST_DIR --archive\n\nArguments and options:\n--path, required
-       - PATH to destination directory.\n--archive, optional              - option to compese destination directory."
+    echo "Enter the right PATH.\nExample of usage: sh script1.sh -p PATH_TO_DEST_DIR -a\n\nArguments and options:\n-p, required
+       - PATH to destination directory.\n-a, optional              - option to compese destination directory."
 }
 
 
