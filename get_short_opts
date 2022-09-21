@@ -1,10 +1,9 @@
 #!/bin/bash
 set -x
 #set -e
-#Variables
 
-#!/bin/bash
 vm_stat () {
+    local RESULT_SUCCESS = 0
     if [ ! -d $DIR_PATH ];
     then
         mkdir -p $DIR_PATH
@@ -21,16 +20,16 @@ vm_stat () {
             cp /proc/cpuinfo $DIR_PATH/
             chmod a+w $DIR_PATH/cpuinfo
             top -n 1 | head -n 5 | tee -a $DIR_PATH/cpuinfo
-            return 1
+            RESULT_SUCCESS = 1
         else
-            return 0
+            RESULT_SUCCESS = 0
             echo "cannot create directory $DIR_PATH"
         fi
     else
-        return 0
+        RESULT_SUCCESS = 0
         echo "cannot create directory ‘$DIR_PATH’: File exists"
     fi
-
+    return $RESULT_SUCCESS
 }
 
 
@@ -78,4 +77,3 @@ if [ "x$DIR_PATH" != "x" ];
 fi
 
 
-#eval set -- "$OPTS"
