@@ -2,12 +2,15 @@
 set -x
 #set -e
 #Variables
+
+#!/bin/bash
 vm_stat () {
     if [ ! -d $DIR_PATH ];
     then
         mkdir -p $DIR_PATH
         if [ $? -eq 0 ];
         then
+            DIR_FAIL=false
             uname -a | tee $DIR_PATH/info
             cat /etc/lsb-release | tee -a $DIR_PATH/info
             df -h | tee $DIR_PATH/disks
@@ -18,16 +21,16 @@ vm_stat () {
             cp /proc/cpuinfo $DIR_PATH/
             chmod a+w $DIR_PATH/cpuinfo
             top -n 1 | head -n 5 | tee -a $DIR_PATH/cpuinfo
+            return 1
         else
-            echo FAIL
+            return 0
             echo "cannot create directory $DIR_PATH"
-            exit 1
-	fi
+        fi
     else
-	echo "cannot create directory ‘$DIR_PATH’: File exists"
-	return 1
-        
+        return 0
+        echo "cannot create directory ‘$DIR_PATH’: File exists"
     fi
+
 }
 
 
@@ -68,7 +71,7 @@ done
 if [ "x$DIR_PATH" != "x" ];
     then
 	   vm_stat
-	   if [ "$ARCHIVE" = true ] && [ $? -gt 1 ];
+	   if [ "$ARCHIVE" = true ] && [ $? -eq 1 ];
            then
                zip_vm_stat
            fi
