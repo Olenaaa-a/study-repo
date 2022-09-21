@@ -9,8 +9,7 @@ vm_stat () {
         mkdir -p $DIR_PATH
         if [ $? -eq 0 ];
         then
-            DIR_FAIL=false
-            uname -a | tee $DIR_PATH/info
+	    uname -a | tee $DIR_PATH/info
             cat /etc/lsb-release | tee -a $DIR_PATH/info
             df -h | tee $DIR_PATH/disks
             lsblk | tee -a $DIR_PATH/disks
