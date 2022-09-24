@@ -9,7 +9,7 @@ vm_stat () {
         mkdir -p $DIR_PATH
         if [ $? -eq 0 ];
         then
-	    uname -a | tee $DIR_PATH/info
+            uname -a | tee $DIR_PATH/info
             cat /etc/lsb-release | tee -a $DIR_PATH/info
             df -h | tee $DIR_PATH/disks
             lsblk | tee -a $DIR_PATH/disks
@@ -26,7 +26,7 @@ vm_stat () {
         fi
     else
         RESULT_SUCCESS=0
-        echo "cannot create directory ‘$DIR_PATH’: File exists"
+        echo "cannot create directory "$DIR_PATH": File exists"
     fi
     return $RESULT_SUCCESS
 }
@@ -48,16 +48,14 @@ SHORT=p:a
 while getopts $SHORT params; do
     case $params in
         p)
-            if [ "$OPTARG" = "" ];
-                then
-                    echo 'Path value is empty'
-                    exit 1
+            if [ -n "$OPTARG" ];
+            then
+                DIR_PATH=$OPTARG
             fi
-            DIR_PATH=$OPTARG
             ;;
         a)
-            ARCHIVE=true
-	    ;;
+            ARCHIVE = true
+            ;;
         ?)
             usage
             exit1
@@ -66,13 +64,24 @@ while getopts $SHORT params; do
 done
 
 
-if [ "x$DIR_PATH" != "x" ];
+if [ -n "$DIR_PATH" ];
     then
-	   vm_stat
-	   if [ "$ARCHIVE" = true ] && [ $? -eq 1 ];
+           vm_stat
+           if [ $? -eq 1 ] && [ "$ARCHIVE" = true ];
            then
                zip_vm_stat
            fi
+else
+    DIR_PATH=/tmp/reports-$(echo $RANDOM | md5sum | head -c 20; )
+    if [ $? -eq 0 ];
+    then
+        vm_stat
+        if [ $? -eq 1 ];
+        then
+            rm -rf $DIR_PATH
+        fi
+    fi
 fi
+
 
 
