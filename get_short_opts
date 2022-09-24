@@ -2,33 +2,46 @@
 set -x
 #set -e
 
-vm_stat () {
-    local RESULT_SUCCESS=0
-    if [ ! -d $DIR_PATH ];
+
+get_os_info () {
+    if [ ${DIR_PATH} != "/dev/null" ];
     then
-        mkdir -p $DIR_PATH
-        if [ $? -eq 0 ];
-        then
-            uname -a | tee $DIR_PATH/info
-            cat /etc/lsb-release | tee -a $DIR_PATH/info
-            df -h | tee $DIR_PATH/disks
-            lsblk | tee -a $DIR_PATH/disks
-            cat /etc/fstab | tee -a $DIR_PATH/disks
-            sudo fdisk -x /dev/sda | tee -a $DIR_PATH/disks
-            sudo du -ch --max-depth=1 / 2> /dev/null | tee -a $DIR_PATH/disks
-            cp /proc/cpuinfo $DIR_PATH/
-            chmod a+w $DIR_PATH/cpuinfo
-            top -n 1 | head -n 5 | tee -a $DIR_PATH/cpuinfo
-            RESULT_SUCCESS=1
-        else
-            RESULT_SUCCESS=0
-            echo "cannot create directory $DIR_PATH"
-        fi
+        DIR_PATH_INFO="${DIR_PATH}/info"
     else
-        RESULT_SUCCESS=0
         echo "cannot create directory "$DIR_PATH": File exists"
+        DIR_PATH_INFO="${DIR_PATH}"
     fi
-    return $RESULT_SUCCESS
+    uname -a | tee $DIR_PATH_INFO
+    cat /etc/lsb-release | tee -a $DIR_PATH_INFO
+}
+
+
+get_disks_info () {
+    if [ ${DIR_PATH} != "/dev/null" ];
+    then
+        DIR_PATH_DISK="${DIR_PATH}/disks"
+    else
+        echo "cannot create directory "$DIR_PATH": File exists"
+        DIR_PATH_DISK="${DIR_PATH}"
+    fi
+    df -h | tee $DIR_PATH_DISK
+    lsblk | tee -a $DIR_PATH_DISK
+    cat /etc/fstab | tee -a $DIR_PATH_DISK
+    sudo fdisk -x /dev/sda | tee -a $DIR_PATH_DISK
+    sudo du -ch --max-depth=1 / 2> /dev/null | tee -a $DIR_PATH_DISK
+}
+
+
+get_cpu_info () {
+    if [ ${DIR_PATH} != "/dev/null" ];
+    then
+        DIR_PATH_CPU="${DIR_PATH}/cpuinfo"
+    else
+        echo "cannot create directory "$DIR_PATH": File exists"
+        DIR_PATH_CPU="${DIR_PATH}"
+    fi
+    cat /proc/cpuinfo | tee -a $DIR_PATH_CPU
+    top -n 1 | head -n 5 | tee -a $DIR_PATH_CPU
 }
 
 
@@ -51,10 +64,12 @@ while getopts $SHORT params; do
             if [ -n "$OPTARG" ];
             then
                 DIR_PATH=$OPTARG
+            else
+                DIR_PATH=: ${1?}
             fi
             ;;
         a)
-            ARCHIVE = true
+            ARCHIVE=true
             ;;
         ?)
             usage
@@ -63,25 +78,19 @@ while getopts $SHORT params; do
     esac
 done
 
-
 if [ -n "$DIR_PATH" ];
     then
-           vm_stat
-           if [ $? -eq 1 ] && [ "$ARCHIVE" = true ];
-           then
-               zip_vm_stat
-           fi
-else
-    DIR_PATH=/tmp/reports-$(echo $RANDOM | md5sum | head -c 20; )
-    if [ $? -eq 0 ];
-    then
-        vm_stat
-        if [ $? -eq 1 ];
+        mkdir -p $DIR_PATH
+        get_os_info && get_disks_info && get_cpu_info
+        if [ "$ARCHIVE" = true ];
         then
-            rm -rf $DIR_PATH
+            zip_vm_stat
         fi
+else
+    DIR_PATH=/dev/null
+    if [ $? -eq 0 ];
+        then
+        get_os_info && get_disks_info && get_cpu_info
     fi
 fi
-
-
 
