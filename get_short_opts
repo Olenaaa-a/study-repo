@@ -1,0 +1,84 @@
+#!/bin/bash
+set -x
+#set -e
+
+vm_stat () {
+    local RESULT_SUCCESS=0
+    if [ ! -d $DIR_PATH ];
+    then
+        mkdir -p $DIR_PATH
+        if [ $? -eq 0 ];
+        then
+            uname -a | tee $DIR_PATH/info
+            cat /etc/lsb-release | tee -a $DIR_PATH/info
+            df -h | tee $DIR_PATH/disks
+            lsblk | tee -a $DIR_PATH/disks
+            cat /etc/fstab | tee -a $DIR_PATH/disks
+            sudo fdisk -x /dev/sda | tee -a $DIR_PATH/disks
+            sudo du -ch --max-depth=1 / 2> /dev/null | tee -a $DIR_PATH/disks
+            cp /proc/cpuinfo $DIR_PATH/
+            chmod a+w $DIR_PATH/cpuinfo
+            top -n 1 | head -n 5 | tee -a $DIR_PATH/cpuinfo
+            RESULT_SUCCESS=1
+        else
+            RESULT_SUCCESS=0
+            echo "cannot create directory $DIR_PATH"
+        fi
+    else
+        RESULT_SUCCESS=0
+        echo "cannot create directory "$DIR_PATH": File exists"
+    fi
+    return $RESULT_SUCCESS
+}
+
+
+zip_vm_stat () {
+    sudo tar cfz report.tar.gz $DIR_PATH/
+}
+
+
+usage () {
+    echo "Enter the right PATH.\nExample of usage: sh script1.sh -p PATH_TO_DEST_DIR -a\n\nArguments and options:\n-p, required
+       - PATH to destination directory.\n-a, optional              - option to compese destination directory."
+}
+
+
+SHORT=p:a
+
+while getopts $SHORT params; do
+    case $params in
+        p)
+            if [ -n "$OPTARG" ];
+            then
+                DIR_PATH=$OPTARG
+            fi
+            ;;
+        a)
+            ARCHIVE = true
+            ;;
+        ?)
+            usage
+            exit1
+            ;;
+    esac
+done
+
+
+if [ -n "$DIR_PATH" ];
+    then
+           vm_stat
+           if [ $? -eq 1 ] && [ "$ARCHIVE" = true ];
+           then
+               zip_vm_stat
+           fi
+else
+    DIR_PATH=/tmp/reports-$(echo $RANDOM | md5sum | head -c 20; )
+    if [ $? -eq 0 ];
+    then
+        vm_stat
+        if [ $? -eq 1 ];
+        then
+            rm -rf $DIR_PATH
+        fi
+    fi
+fi
