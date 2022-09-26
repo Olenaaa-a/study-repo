@@ -56,7 +56,7 @@ vm_stat () {
 
 
 zip_vm_stat () {
-    sudo tar cfz report.tar.gz $1/
+    sudo tar cfz report.tar.gz $1
 }
 
 
