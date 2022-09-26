@@ -1,52 +1,62 @@
 #!/bin/bash
 set -x
-#set -e
+
 
 
 get_os_info () {
-    if [ "$DIR_PATH" != "/dev/null" ];
-    then
-        DIR_PATH_INFO=$($DIR_PATH/info)
-    else
-        echo "cannot create directory "$DIR_PATH": File exists"
-        DIR_PATH_INFO=$DIR_PATH
-    fi
-    uname -a | tee $DIR_PATH_INFO
-    cat /etc/lsb-release | tee -a $DIR_PATH_INFO
+    uname -a | tee $1
+    cat /etc/lsb-release | tee -a $1
 }
 
 
 get_disks_info () {
-    if [ "$DIR_PATH" != "/dev/null" ];
-    then
-        DIR_PATH_DISK=$($DIR_PATH/info)
-    else
-        echo "cannot create directory "$DIR_PATH": File exists"
-        DIR_PATH_DISK=$DIR_PATH
-    fi
-    df -h | tee $DIR_PATH_DISK
-    lsblk | tee -a $DIR_PATH_DISK
-    cat /etc/fstab | tee -a $DIR_PATH_DISK
-    sudo fdisk -x /dev/sda | tee -a $DIR_PATH_DISK
-    sudo du -ch --max-depth=1 / 2> /dev/null | tee -a $DIR_PATH_DISK
+    df -h | tee $1
+    lsblk | tee -a $1
+    cat /etc/fstab | tee -a $1
+    sudo fdisk -x /dev/sda | tee -a $1
+    sudo du -ch --max-depth=1 / 2> /dev/null | tee -a $1
 }
 
 
 get_cpu_info () {
-    if [ "$DIR_PATH" != "/dev/null" ];
+    cat /proc/cpuinfo | tee -a $1
+    top -n 1 | head -n 5 | tee -a $1
+}
+
+vm_stat () {
+    local RESULT_SUCCESS=0
+    if [ "x$1" == "x" ];
     then
-        DIR_PATH_CPU=$($DIR_PATH/info)
-    else
-        echo "cannot create directory "$DIR_PATH": File exists"
-        DIR_PATH_CPU=$DIR_PATH
+        get_os_info /dev/null
+        get_disks_info /dev/null
+        get_cpu_info /dev/null
+        RESULT_SUCCESS=1
+        return $RESULT_SUCCESS
     fi
-    cat /proc/cpuinfo | tee -a $DIR_PATH_CPU
-    top -n 1 | head -n 5 | tee -a $DIR_PATH_CPU
+
+    if [ ! -d $1 ];
+    then
+        mkdir -p $1
+        if [ $? -eq 0 ];
+        then
+            get_os_info "$1/info"
+            get_disks_info "$1/disks"
+            get_cpu_info "$1/cpuinfo"
+            RESULT_SUCCESS=1
+        else
+            RESULT_SUCCESS=0
+            echo "cannot create directory $1"
+        fi
+    else
+        RESULT_SUCCESS=0
+        echo "cannot create directory "$1": File exists"
+    fi
+    return $RESULT_SUCCESS
 }
 
 
 zip_vm_stat () {
-    sudo tar cfz report.tar.gz $DIR_PATH/
+    sudo tar cfz report.tar.gz $1/
 }
 
 
@@ -78,16 +88,11 @@ done
 
 if [ -n "$DIR_PATH" ];
     then
-        mkdir -p $DIR_PATH
-        get_os_info && get_disks_info && get_cpu_info
-        if [ "$ARCHIVE" = true ];
+        vm_stat $DIR_PATH
+        if [ $? -eq 1 ] && [ "$ARCHIVE" = true ];
         then
-            zip_vm_stat
+            zip_vm_stat $DIR_PATH
         fi
 else
-    DIR_PATH=/dev/null
-    if [ $? -eq 0 ];
-        then
-        get_os_info && get_disks_info && get_cpu_info
-    fi
+    vm_stat
 fi
